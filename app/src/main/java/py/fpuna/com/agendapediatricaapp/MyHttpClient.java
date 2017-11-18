@@ -9,13 +9,16 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 
+import py.fpuna.com.agendapediatricaapp.apis.ConstantesRest;
+
 /**
  * Created by marceloe on 08/10/17.
  */
 
 public class MyHttpClient {
 
-    private static final String PATH = "http://localhost:8080/AgendaPediatrica/webresources/";
+    private static final String PATH = ConstantesRest.urlBase;
+
 
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");

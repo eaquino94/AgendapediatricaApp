@@ -3,8 +3,12 @@ package py.fpuna.com.agendapediatricaapp;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -20,6 +24,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.gcm.Task;
 import com.google.gson.Gson;
 import com.squareup.okhttp.Response;
 
@@ -27,6 +32,10 @@ import com.squareup.okhttp.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Date;
+
+import py.fpuna.com.agendapediatricaapp.apis.Manager;
 import py.fpuna.com.agendapediatricaapp.dto.UsuarioDTO;
 
 /**
@@ -36,7 +45,7 @@ import py.fpuna.com.agendapediatricaapp.dto.UsuarioDTO;
 public class SignInActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
-    public String host="http://localhost:8080";
+
 
     private static final String TAG = "SignInActivity";
     private static final int RC_SIGN_IN = 9001;
@@ -121,9 +130,15 @@ public class SignInActivity extends AppCompatActivity implements
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
+            System.out.println("RESULTADO DEL LOGIN");
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
+          //  handleSignInResult(result);
+            goMainScreen(result);
         }
+
+
+
+
     }
     // [END onActivityResult]
 
@@ -227,7 +242,8 @@ public class SignInActivity extends AppCompatActivity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.sign_in_button:
-                signIn();
+                //signIn();
+                signInWithGoogle();
                 break;
             case R.id.sign_out_button:
                 signOut();
@@ -237,17 +253,45 @@ public class SignInActivity extends AppCompatActivity implements
                 break;
         }
     }
+    ///
+
+
+    private void signInWithGoogle() {
+        if(mGoogleApiClient != null) {
+            mGoogleApiClient.disconnect();
+        }
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+
+        final Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+
+
 
     private void goMainScreen(GoogleSignInResult result) {
 
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         GoogleSignInAccount account = result.getSignInAccount();
+
 
         MyHttpClient myHttpClient = new MyHttpClient();
         String jsonString = null;
 
-        try {
-            jsonString =  myHttpClient.doPostRequest("agendapediatrica.usuarios/ValidarUsuario/", "cparedes.cabanas@gmail.com");/*account.getEmail()*/
-            /*System.out.println("Json valor: "+jsonString);*/
+        MyTask myTask = new MyTask( "cparedes.cabanas@gmail.com");
+        myTask.execute();
+
+       /* try {
+            jsonString =  myHttpClient.doPostRequest("agendapediatrica.usuarios/ValidarUsuario/", "cparedes.cabanas@gmail.com");*//*account.getEmail()*//*
+            *//*System.out.println("Json valor: "+jsonString);*//*
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -263,11 +307,69 @@ public class SignInActivity extends AppCompatActivity implements
                 return;
             }
 
-            /*Intent intent = new Intent(this, MainActivity.class);
+            *//*Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra("idUsuario", usuarioDTO.getId());
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);*/
+            startActivity(intent);*//*
+        }*/
+
+    }
+
+
+    private class MyTask extends AsyncTask<String, String, String>
+    {
+        String correo;
+
+        public MyTask( String correo ) {
+          this.correo = correo;
         }
+
+        @Override
+        protected void onPreExecute()
+        {
+            //updateDisplay("Starting Task");
+            super.onPreExecute();
+        }
+
+
+        @Override
+        protected String doInBackground(String ... params)
+        {
+//
+            try {
+
+                Manager manager = new Manager();
+                Boolean respuesta = manager.validarUsuario(correo);
+
+
+                if(respuesta){
+                    System.out.println("EL EMAIL EXISTE");
+                }else{
+                    System.out.println("EL EMAIL NOOO EXISTE");
+                }
+
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+
+                return "ERROR-" + e.toString();
+            }
+
+            return "";
+
+        }
+
+
+
+
+        @Override
+        protected void onPostExecute(String result)
+        {
+            System.out.println("POST EJECUCION");
+
+        }
+
 
     }
 }
