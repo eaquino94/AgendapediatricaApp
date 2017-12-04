@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import py.fpuna.com.agendapediatricaapp.adapter.HijosAdapter;
+import py.fpuna.com.agendapediatricaapp.apis.LoginData;
 import py.fpuna.com.agendapediatricaapp.dto.HijosDTO;
+import py.fpuna.com.agendapediatricaapp.dto.VacunaDTO;
 
 public class HijosActivity extends AppCompatActivity {
 
@@ -43,7 +45,7 @@ public class HijosActivity extends AppCompatActivity {
 
         // estos dos metodos muestran la lista en el activity, llamar despues de tener la lista de hijos
         generarLineaLayoutVertical();
-        inicializarAdaptadorRV(crearAdaptador(lista));
+        inicializarAdaptadorRV(crearAdaptador(LoginData.getUsuario().getHijosCollection()));
     }
 
     public void generarLineaLayoutVertical() {
@@ -66,6 +68,8 @@ public class HijosActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        List<VacunaDTO> list = new ArrayList<>();
+        LoginData.setListVacunas(list);
         Intent intent = new Intent(HijosActivity.this, LoginActivity.class);
         startActivity(intent);
         finish();

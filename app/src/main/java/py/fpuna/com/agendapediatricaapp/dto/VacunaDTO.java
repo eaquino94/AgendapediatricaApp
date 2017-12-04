@@ -10,7 +10,7 @@ public class VacunaDTO {
 
     private Character aplicada;
     private Date fechaAplicacion;
-    private HijosDTO idHijo;
+    private Integer idHijo;
     private Integer id;
     private String descripcionVacunas;
     private String enfermedadVacunas;
@@ -41,11 +41,11 @@ public class VacunaDTO {
         this.fechaAplicacion = fechaAplicacion;
     }
 
-    public HijosDTO getIdHijo() {
+    public Integer getIdHijo() {
         return idHijo;
     }
 
-    public void setIdHijo(HijosDTO idHijo) {
+    public void setIdHijo(Integer idHijo) {
         this.idHijo = idHijo;
     }
 
@@ -71,5 +71,17 @@ public class VacunaDTO {
 
     public void setEnfermedadVacunas(String enfermedadVacunas) {
         this.enfermedadVacunas = enfermedadVacunas;
+    }
+
+    @Override
+    public String toString() {
+        return "VacunaDTO{" +
+                "aplicada=" + aplicada +
+                ", fechaAplicacion=" + fechaAplicacion +
+                ", idHijo=" + idHijo +
+                ", id=" + id +
+                ", descripcionVacunas='" + descripcionVacunas + '\'' +
+                ", enfermedadVacunas='" + enfermedadVacunas + '\'' +
+                '}';
     }
 }

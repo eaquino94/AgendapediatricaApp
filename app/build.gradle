@@ -38,6 +38,11 @@ dependencies {
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.google.code.gson:gson:2.8.0'
     compile 'com.squareup.okhttp:okhttp:2.7.5'
+    compile 'com.weiwangcn.betterspinner:library-material:1.1.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'
+    compile 'com.google.firebase:firebase-messaging:10.0.1'
+    compile 'com.google.firebase:firebase-core:10.0.1'
     testCompile 'junit:junit:4.12'
 }
+
+apply plugin: 'com.google.gms.google-services'

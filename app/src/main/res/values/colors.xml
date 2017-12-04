@@ -6,6 +6,8 @@
     <color name="colorAccent">#FF4081</color>
     <color name="textColor">#ffffff</color>
     <color name="textColor2">#000000</color>
+    <color name="primary_text">#000000</color>
+    <color name="secondary_text">#939598</color>
     <!--Colores de google-->
     <color name="blue_grey_500">#607D8B</color>
     <color name="blue_grey_600">#546E7A</color>

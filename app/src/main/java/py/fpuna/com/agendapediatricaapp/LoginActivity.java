@@ -1,11 +1,14 @@
 package py.fpuna.com.agendapediatricaapp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -16,7 +19,16 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
+import java.util.ArrayList;
+import java.util.Date;
+
 import py.fpuna.com.agendapediatricaapp.apis.ConstantesRest;
+import py.fpuna.com.agendapediatricaapp.apis.LoginData;
+import py.fpuna.com.agendapediatricaapp.apis.Manager;
+import py.fpuna.com.agendapediatricaapp.apis.Respuesta;
+import py.fpuna.com.agendapediatricaapp.dto.HijosDTO;
+import py.fpuna.com.agendapediatricaapp.dto.UsuarioDTO;
+import py.fpuna.com.agendapediatricaapp.dto.VacunaDTO;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -115,48 +127,116 @@ public class LoginActivity extends AppCompatActivity {
         StrictMode.setThreadPolicy(policy);
 
         //ejecuta la url
-        OkHttpHandler okHttpHandler= new OkHttpHandler();
-        okHttpHandler.execute(ConstantesRest.API_VALDILAR_USUARIO+email);
+       // OkHttpHandler okHttpHandler= new OkHttpHandler();
+       // okHttpHandler.execute(email);
+
+        MyTask myTask = new MyTask(getApplicationContext(), email, "validarusuario");
+        myTask.execute();
 
     }
 
-    // tareas asyncronas
-    public class OkHttpHandler extends AsyncTask<String, String, String> {
 
-        OkHttpClient client = new OkHttpClient();
+    private class MyTask extends AsyncTask<Respuesta, Respuesta, Respuesta>
+    {
+        Context context;
+        String email;
+        String metodo;
+
+        public MyTask(Context context, String email, String metodo) {
+            this.context = context;
+            this.email = email;
+            this.metodo = metodo;
+
+        }
+
 
         @Override
-        protected String doInBackground(String...params) {
+        protected void onPreExecute()
+        {
+            //updateDisplay("Starting Task");
+            super.onPreExecute();
+        }
 
-            Request.Builder builder = new Request.Builder();
-            builder.url(params[0]);
-            Request request = builder.build();
 
+        @Override
+        protected Respuesta doInBackground(Respuesta... params)
+        {
+
+            Respuesta respuesta = new Respuesta();
             try {
-                Response response = client.newCall(request).execute();
-                return response.body().string();
-            }catch (Exception e){
+
+                Manager manager = new Manager();
+
+                if(metodo.equals("validarusuario")){
+
+                    respuesta = manager.validarUsuario(email);
+                }else{
+                    respuesta = manager.getVacunas(email);
+                }
+
+
+
+            } catch (Exception e) {
                 e.printStackTrace();
+
             }
-            return null;
+
+            return respuesta;
+
         }
 
-        // respuesta del api, aqui se debe obtener la respuesta del servicio
-        //y si exite va al home activity
+
         @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
+        protected void onPostExecute(Respuesta respuesta)
+        {
 
-            System.out.println(s);
-            /**
-             * Resultado del api
-             * Se debe enviar como parametro al activity
-             * el ID del usuario, para buscar sus hijos
-             */
-            Intent intent = new Intent(LoginActivity.this, HijosActivity.class);
-          //  intent.putExtra("idUsuario", usuarioDTO.getId());
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            if(respuesta.getEstado().equals("OK")){
+
+                if(metodo.equals("validarusuario")){
+                    UsuarioDTO usuarioDTO = (UsuarioDTO) respuesta.getDatos();
+                    if(usuarioDTO.getValido()){
+                        for (HijosDTO hijos: usuarioDTO.getHijosCollection()) {
+                            MyTask myTask = new MyTask(getApplicationContext(), String.valueOf(hijos.getId()), "getVacunas");
+                            myTask.execute();
+
+                        }
+
+                        LoginData.setUsuario(usuarioDTO);
+
+                        Intent intent = new Intent(LoginActivity.this, HijosActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+
+                    }else{
+
+                    }
+
+                }else if(metodo.equals("getVacunas")){
+                    HijosDTO hijos = (HijosDTO) respuesta.getDatos();
+                    for (VacunaDTO vacuna: hijos.getVacunasCollection() ) {
+                        vacuna.setIdHijo(Integer.parseInt(email));
+                        LoginData.getListVacunas().add(vacuna);
+                    }
+
+                   /* Intent intent = new Intent(LoginActivity.this, HijosActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();*/
+
+                }else if(metodo.equals("mostrarHijos")){
+
+
+                   /* Intent intent = new Intent(LoginActivity.this, HijosActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();*/
+
+                }
+
+            }
         }
+
     }
+
 }
